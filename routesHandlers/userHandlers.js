@@ -1,9 +1,10 @@
 //dependencys
 const data = require("../lib/data");
 const utilities = require("../utils/utlities");
+const routeTokenHandlers = require("../routesHandlers/routeTokenHandlers");
 
 //module scaffolding
-const   routesUserHandlers = {};
+const routesUserHandlers = {};
 
 routesUserHandlers.user = (requestProperty, callback) => {
   const acceptedMethod = ["get", "post", "put", "delete"];
@@ -88,6 +89,7 @@ routesUserHandlers._usersMethod.post = (requestProperty, callback) => {
     });
   }
 };
+
 //* get method function
 routesUserHandlers._usersMethod.get = (requestProperty, callback) => {
   const phone =
@@ -96,11 +98,24 @@ routesUserHandlers._usersMethod.get = (requestProperty, callback) => {
       ? requestProperty.querys.phone
       : null;
   if (phone) {
-    data.read("users", phone, (err, u) => {
-      const copyData = { ...utilities.parseJson(u) };
-      if (!err && copyData) {
-        delete copyData.password;
-        callback(200, copyData);
+    const token =
+      typeof requestProperty.headers.token === "string" &&
+      requestProperty.headers.token.trim().length === 20
+        ? requestProperty.headers.token
+        : null;
+    routeTokenHandlers._token.verify(token, phone, (res) => {
+      if (res) {
+        data.read("users", phone, (err, u) => {
+          const copyData = { ...utilities.parseJson(u) };
+          if (!err && copyData) {
+            delete copyData.password;
+            callback(200, copyData);
+          }
+        });
+      } else {
+        callback(403, {
+          massage: "your token is not authentic",
+        });
       }
     });
   }

@@ -35,7 +35,7 @@ utilities.token = (tokenString) => {
   let tokens = "";
   if (typeof tokenString === "number" && tokenString > 0) {
     for (let i = 0; i < tokenString; i++) {
-      const totalKey = "abcdefghijklmnopqrstubwxyz123456789@#$%&";
+      const totalKey = "abcdefghijklmnopqrstubwxyz123456789";
       const randomNumber = Math.floor(Math.random() * totalKey.length);
       tokens += totalKey.charAt(randomNumber);
     }

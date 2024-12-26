@@ -82,7 +82,7 @@ routeTokenHandlers._token.get = (requestproperty, callback) => {
 
   if (id) {
     data.read("tokens", id, (err, uData) => {
-      const userTokenData = { ...utilities.parseJson(uData) };
+      const userTokenData = {...utilities.parseJson(uData)};
       if (!err && userTokenData) {
         callback(200, userTokenData);
       } else {
@@ -139,6 +139,51 @@ routeTokenHandlers._token.put = (requestproperty, callback) => {
     });
   }
 };
-routeTokenHandlers._token.delete = (requestproperty, callback) => {};
+
+//*update token
+routeTokenHandlers._token.delete = (requestproperty, callback) => {
+  const id =
+    typeof requestproperty.querys.id === "string" &&
+    requestproperty.querys.id.trim().length === 20
+      ? requestproperty.querys.id
+      : null;
+  if (id) {
+    data.delete("tokens", id, (err) => {
+      if (!err) {
+        callback(200, {
+          massage: "token deleted successfully",
+        });
+      } else {
+        callback(500, {
+          massage: "There was a problem in server side",
+        });
+      }
+    });
+  } else {
+    callback(400, {
+      massage: "unable to delete token",
+    });
+  }
+};
+
+//?token verify function
+routeTokenHandlers._token.verify = (id, phone, callback) => {
+  if (id && phone) {
+    data.read("tokens", id, (err, tData) => {
+      const tokenData = utilities.parseJson(tData);
+      if (!err && tokenData) {
+        if (tokenData.phone === phone && tokenData.expire > Date.now()) {
+          callback(true);
+        } else {
+          callback(false);
+        }
+      } else {
+        callback(false);
+      }
+    });
+  } else {
+    callback(false);
+  }
+};
 
 module.exports = routeTokenHandlers;
