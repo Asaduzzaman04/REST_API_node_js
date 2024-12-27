@@ -144,41 +144,61 @@ routesUserHandlers._usersMethod.put = (requestProperty, callback) => {
     requestProperty.body.password.trim().length >= 8
       ? requestProperty.body.password
       : null;
+  const token =
+    typeof requestProperty.headers.token === "string" &&
+    requestProperty.headers.token.trim().length === 20
+      ? requestProperty.headers.token
+      : null;
 
   if (phone) {
     if (firstName || lastName || password) {
       //lookup the user
-      data.read("users", phone, (err, uData) => {
-        const userData = { ...utilities.parseJson(uData) };
-        if (!err && userData) {
-          if (firstName) {
-            userData.firstName = firstName;
+
+      if (token) {
+        routeTokenHandlers._token.verify(token, phone, (res) => {
+          if (res) {
+            data.read("users", phone, (err, uData) => {
+              const userData = { ...utilities.parseJson(uData) };
+              if (!err && userData) {
+                if (firstName) {
+                  userData.firstName = firstName;
+                }
+                if (lastName) {
+                  userData.lastName = lastName;
+                }
+                if (password) {
+                  userData.password = utilities.hash(password);
+                }
+                //update user data to database
+                data.update("users", phone, userData, (err) => {
+                  if (!err) {
+                    callback(200, {
+                      massage: "data updated successfully",
+                    });
+                  } else {
+                    callback(500, {
+                      massage:
+                        "unable to update your information its a server side issue",
+                    });
+                  }
+                });
+              } else {
+                callback(400, {
+                  massage: "you have a problem in your request",
+                });
+              }
+            });
+          } else {
+            callback(403, {
+              massage: "invalid token",
+            });
           }
-          if (lastName) {
-            userData.lastName = lastName;
-          }
-          if (password) {
-            userData.password = utilities.hash(password);
-          }
-          //update user data to database
-          data.update("users", phone, userData, (err) => {
-            if (!err) {
-              callback(200, {
-                massage: "data updated successfully",
-              });
-            } else {
-              callback(500, {
-                massage:
-                  "unable to update your information its a server side issue",
-              });
-            }
-          });
-        } else {
-          callback(400, {
-            massage: "you have a problem in your request",
-          });
-        }
-      });
+        });
+      } else {
+        callback(400, {
+          massage: "token required",
+        });
+      }
     } else {
       callback(400, {
         massage: "you have a problem in your requsets",
@@ -190,6 +210,7 @@ routesUserHandlers._usersMethod.put = (requestProperty, callback) => {
     });
   }
 };
+
 //* delete method function
 routesUserHandlers._usersMethod.delete = (requestProperty, callback) => {
   const phone =
@@ -197,21 +218,35 @@ routesUserHandlers._usersMethod.delete = (requestProperty, callback) => {
     requestProperty.querys.phone.trim().length === 11
       ? requestProperty.querys.phone
       : null;
-  if (phone) {
-    data.read("users", phone, (err, userData) => {
-      if (!err && userData) {
-        data.delete("users", phone, (err) => {
-          if (!err) {
-            callback(200, {
-              massage: "your file deleted succesfully",
+  const token =
+    typeof requestProperty.headers.token === "string" &&
+    requestProperty.headers.token.trim().length === 20
+      ? requestProperty.headers.token
+      : null;
+
+  if (phone && token) {
+    routeTokenHandlers._token.verify(token, phone, (res) => {
+      if (res) {
+        data.read("users", phone, (err, userData) => {
+          if (!err && userData) {
+            data.delete("users", phone, (err) => {
+              if (!err) {
+                callback(200, {
+                  massage: "your file deleted succesfully",
+                });
+              } else {
+                callback(400, {
+                  massage: "there was a problem to delete the data",
+                });
+              }
             });
           } else {
-            callback(400, {
-              massage: "there was a problem to delete the data",
-            });
           }
         });
       } else {
+        callback(403, {
+          massage: "invalid token",
+        });
       }
     });
   } else {
