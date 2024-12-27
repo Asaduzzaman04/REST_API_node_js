@@ -23,7 +23,7 @@ handleReqRes.resReq = (req, res) => {
     method,
     trimedString,
     querys,
-    headers,
+    headers,  
   };
   const chosenHandler = routes[trimedString]
     ? routes[trimedString]
