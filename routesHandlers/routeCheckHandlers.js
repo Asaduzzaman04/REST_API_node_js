@@ -360,9 +360,30 @@ routeCheckHandlers._check.delete = (requestProperty, callback) => {
                   if (isValid) {
                     data.delete("checks", id, (err) => {
                       if (!err) {
-                        callback(200, {
-                          massage: "you have delete checks data successfully",
-                        });
+                        const userCheck =
+                          typeof userData.check === "object" &&
+                          userData.check instanceof Array
+                            ? userData.check
+                            : [];
+                        let checkPosition = userCheck.indexOf(id);
+                        if (checkPosition > -1) {
+                          userCheck.splice(checkPosition, 1);
+                          data.update("users", userData.phone, (err) => {
+                            if (!err) {
+                              callback(200, {
+                                massage: "your data seleted successfully",
+                              });
+                            } else {
+                              callback(500, {
+                                massage: "there was a server side error",
+                              });
+                            }
+                          });
+                        } else {
+                          callback(200, {
+                            massage: "your id is not exiest",
+                          });
+                        }
                       } else {
                         callback(500, {
                           massage: "there was a problem in server side",
