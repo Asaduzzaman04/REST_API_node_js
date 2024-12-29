@@ -151,9 +151,254 @@ routeCheckHandlers._check.post = (requestProperty, callback) => {
     });
   }
 };
-routeCheckHandlers._check.get = (requestProperty, callback) => {};
-routeCheckHandlers._check.put = (requestProperty, callback) => {};
-routeCheckHandlers._check.delete = (requestProperty, callback) => {};
+
+routeCheckHandlers._check.get = (requestProperty, callback) => {
+  const id =
+    typeof requestProperty.querys.id === "string" &&
+    requestProperty.querys.id.trim().length === 20
+      ? requestProperty.querys.id
+      : null;
+
+  if (id) {
+    data.read("checks", id, (err, cData) => {
+      const checkData = utilities.parseJson(cData);
+      if (!err && checkData) {
+        const token =
+          typeof requestProperty.headers.token === "string" &&
+          requestProperty.headers.token.trim().length === 20
+            ? requestProperty.headers.token
+            : null;
+
+        if (token) {
+          data.read("tokens", token, (err, tData) => {
+            const tokenData = utilities.parseJson(tData);
+            if (!err && tokenData) {
+              data.read("users", tokenData.phone, (err, udata) => {
+                const userData = utilities.parseJson(udata);
+                if (!err && userData) {
+                  routeTokenHandlers._token.verify(
+                    token,
+                    userData.phone,
+                    (isValid) => {
+                      if (isValid) {
+                        callback(200, checkData);
+                      } else {
+                        callback(500, {
+                          massage: "there was an error in server side",
+                        });
+                      }
+                    }
+                  );
+                } else {
+                  callback(500, {
+                    massage: "there was a problem in server side",
+                  });
+                }
+              });
+            } else {
+              callback(500, {
+                massage: "there was an error in server side",
+              });
+            }
+          });
+        } else {
+          callback(400, {
+            massage: "authencation failure",
+          });
+        }
+      } else {
+        callback(500, {
+          massage: "there was a server side issue",
+        });
+      }
+    });
+  } else {
+    callback(403, {
+      massage: "you have a problem in your requests",
+    });
+  }
+};
+
+routeCheckHandlers._check.put = (requestProperty, callback) => {
+  const id =
+    typeof requestProperty.body.id === "string" &&
+    requestProperty.body.id.trim().length === 20
+      ? requestProperty.body.id
+      : null;
+  const protocol =
+    typeof requestProperty.body.protocol === "string" &&
+    ["http", "https"].indexOf(requestProperty.body.protocol) > -1
+      ? requestProperty.body.protocol
+      : null;
+  const url =
+    typeof requestProperty.body.url === "string" &&
+    requestProperty.body.url.trim().length > 0
+      ? requestProperty.body.url
+      : null;
+  const method =
+    typeof requestProperty.body.method === "string" &&
+    routeCheckHandlers.acceptedMethod.indexOf(requestProperty.method) > -1
+      ? requestProperty.body.method
+      : null;
+
+  const successCodes =
+    typeof requestProperty.body.successCodes === "object" &&
+    requestProperty.body.successCodes instanceof Array
+      ? requestProperty.body.successCodes
+      : null;
+
+  const timeOutSecond =
+    typeof requestProperty.body.timeOutSecond === "number" &&
+    requestProperty.body.timeOutSecond % 1 === 0 &&
+    requestProperty.body.timeOutSecond >= 1 &&
+    requestProperty.body.timeOutSecond <= 5
+      ? requestProperty.body.timeOutSecond
+      : null;
+
+  if (id) {
+    if (protocol || url || method || successCodes || timeOutSecond) {
+      data.read("checks", id, (err, cData) => {
+        const checkData = utilities.parseJson(cData);
+        if (!err && checkData) {
+          const token =
+            typeof requestProperty.headers.token === "string" &&
+            requestProperty.headers.token.trim().length === 20
+              ? requestProperty.headers.token
+              : null;
+
+          data.read("tokens", token, (err, tData) => {
+            const tokenData = utilities.parseJson(tData);
+            if (!err && tokenData) {
+              routeTokenHandlers._token.verify(
+                token,
+                tokenData.phone,
+                (isValid) => {
+                  if (isValid) {
+                    if (protocol) {
+                      checkData.protocol = protocol;
+                    }
+                    if (url) {
+                      checkData.url = url;
+                    }
+                    if (method) {
+                      checkData.method = method;
+                    }
+                    if (successCodes) {
+                      checkData.successCodes = successCodes;
+                    }
+                    if (timeOutSecond) {
+                      checkData.timeOutSecond = timeOutSecond;
+                    }
+
+                    data.update("checks", id, checkData, (err) => {
+                      if (!err) {
+                        callback(200, {
+                          massage: "checks data updated successfully",
+                        });
+                      } else {
+                        callback(500, {
+                          massage:
+                            "unable to update check data there was a serve side issue",
+                        });
+                      }
+                    });
+                  } else {
+                    callback(403, {
+                      massage: "Authencation falure",
+                    });
+                  }
+                }
+              );
+            } else {
+              callback(403, {
+                massage: "invalid token",
+              });
+            }
+          });
+        } else {
+          callback(403, {
+            massage: "your requested data is not exiest",
+          });
+        }
+      });
+    } else {
+      callback(403, {
+        massage: "you should  to change at least one property",
+      });
+    }
+  } else {
+    callback(403, {
+      massage: "there was a problme in your request",
+    });
+  }
+};
+
+routeCheckHandlers._check.delete = (requestProperty, callback) => {
+  const id =
+    typeof requestProperty.querys.id === "string" &&
+    requestProperty.querys.id.trim().length === 20
+      ? requestProperty.querys.id
+      : null;
+  if (id) {
+    const token =
+      typeof requestProperty.headers.token === "string" &&
+      requestProperty.headers.token.trim().length === 20
+        ? requestProperty.headers.token
+        : null;
+
+    if (token) {
+      data.read("tokens", token, (err, tData) => {
+        const tokenData = utilities.parseJson(tData);
+        if (!err && tokenData) {
+          data.read("users", tokenData.phone, (err, uData) => {
+            const userData = utilities.parseJson(uData);
+            if (!err && userData) {
+              routeTokenHandlers._token.verify(
+                token,
+                userData.phone,
+                (isValid) => {
+                  if (isValid) {
+                    data.delete("checks", id, (err) => {
+                      if (!err) {
+                        callback(200, {
+                          massage: "you have delete checks data successfully",
+                        });
+                      } else {
+                        callback(500, {
+                          massage: "there was a problem in server side",
+                        });
+                      }
+                    });
+                  } else {
+                    callback(400, {
+                      massage: "your rquested data is not valid",
+                    });
+                  }
+                }
+              );
+            } else {
+              callback(500, {
+                massage: "there was a problem server side",
+              });
+            }
+          });
+        } else {
+          callback(500, {
+            massage: "there was a server side error",
+          });
+        }
+      });
+    } else {
+      callback(403, {
+        massage: "authentcation error",
+      });
+    }
+  } else {
+    callback(403, {
+      massage: "you have a problem in your request",
+    });
+  }
+};
 
 //? export eheckhandler
 module.exports = routeCheckHandlers;
