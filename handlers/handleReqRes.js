@@ -18,12 +18,12 @@ handleReqRes.resReq = (req, res) => {
   const decoder = new StringDecoder("utf-8");
   //create a response object for sent it in a callback function as a argument
   const requestProperty = {
-    parseUrl, 
+    parseUrl,
     pathName,
     method,
     trimedString,
     querys,
-    headers,  
+    headers,
   };
   const chosenHandler = routes[trimedString]
     ? routes[trimedString]
