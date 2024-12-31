@@ -13,7 +13,9 @@ const notifications = {};
 notifications.sendTwilioSms = (phone, msg, callback) => {
   //input validation
   const validPhone =
-    typeof phone === "string" && phone.trim().length === 11 ? phone.trim() : false;
+    typeof phone === "string" && phone.trim().length === 11
+      ? phone.trim()
+      : false;
   const validMsg =
     typeof msg === "string" &&
     msg.trim().length > 0 &&
