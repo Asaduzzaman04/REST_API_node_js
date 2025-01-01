@@ -1,27 +1,23 @@
 /*
- * Title : Build first uptime monitoring application  with raw node.
+ * Title : initial file to start the node server and  workers
  * Description : A Restful api to monitoring user defined links.
  * Auther : Asaduzzaman (Asad).
  * Date : 15/12/2024.
  */
 //dependencies
-const http = require("http");
-const handleReqRes = require("./handlers/handleReqRes");
-const environmentToExport = require("./handlers/enviorment");
-
+const server = require("./lib/server");
+const workers = require("./lib/worker");
 
 // app object -- module scaffolding
 const app = {};
 
+app.init = () => {
+  //start the server
+  server.init();
 
-//server create
-app.createServer = () => {
-  const server = http.createServer(handleReqRes.resReq);
-  server.listen(environmentToExport.port, () => {
-    console.log(
-      `server runnng at  http://localhost:${environmentToExport.port}`
-    );
-  });
+  //start the worker
+  workers.init()
 };
 
-app.createServer();
+//call the init function for running the server
+app.init();
