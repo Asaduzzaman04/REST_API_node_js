@@ -16,8 +16,10 @@ app.init = () => {
   server.init();
 
   //start the worker
-  workers.init()
+  workers.init();
 };
 
 //call the init function for running the server
 app.init();
+
+module.exports = app;

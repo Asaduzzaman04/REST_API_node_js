@@ -87,7 +87,7 @@ routeCheckHandlers._check.post = (requestProperty, callback) => {
                       const checkObj = {
                         id: checkId,
                         phone: userData.phone,
-                        protocol,
+                        protocol, 
                         url,
                         timeOutSecond,
                         method,
